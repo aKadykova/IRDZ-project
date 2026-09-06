@@ -1,0 +1,63 @@
+---
+import type { TCtaButton } from '../types';
+
+type ButtonLinkData = Pick<TCtaButton, 'href' | 'label' | 'type' | 'isExternal' | 'isButtonLink'>;
+
+type Props = {
+	data: ButtonLinkData;
+};
+
+const { data } = Astro.props;
+const isPrimary = data.type === 'primary';
+---
+
+<a
+	href={data.href}
+	class:list={['button-link', { 'cta-button': isPrimary, 'secondary-button': !isPrimary }]}
+	target={data.isExternal ? '_blank' : undefined}
+	rel={data.isExternal ? 'noopener noreferrer' : undefined}
+	aria-label={data.label}
+>
+	<span>{data.label}</span>
+</a>
+
+<style>
+	.button-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 50px;
+		padding: 0 24px;
+		box-sizing: border-box;
+		text-align: center;
+		line-height: 1.2;
+		font-size: 16px;
+		font-weight: 600;
+		text-decoration: none;
+		border-radius: 8px;
+		transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+	}
+
+	.cta-button {
+		background-color: var(--color-primary);
+		color: var(--color-text-light);
+	}
+
+	.cta-button:hover {
+		background-color: var(--color-primary-hover);
+	}
+
+	.secondary-button {
+		background-color: transparent;
+		color: var(--color-text-light);
+		border: 1px solid currentColor;
+	}
+
+	.secondary-button:hover {
+		background-color: var(--color-light-overlay);
+	}
+
+	.button-link:active {
+		transform: scale(0.98);
+	}
+</style>
