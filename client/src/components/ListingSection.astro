@@ -1,0 +1,106 @@
+---
+import type { THeadingSectionBlock } from '../types';
+import StrapiImage from './StrapiImage.astro';
+import SectionLink from './SectionLink.astro';
+
+interface Props {
+  data: THeadingSectionBlock;
+}
+
+const { data } = Astro.props;
+const isPlatforms = data.target === 'platforms';
+const items = isPlatforms ? data.innovation_platforms : data.projects;
+---
+
+<section
+  id={data.anchror_link?.replace('#', '')}
+  class:list={['listing-section', { 'projects-section': !isPlatforms, 'platforms-section': isPlatforms }]}
+>
+  <div class="section-inner">
+    <h2>{data.title}</h2>
+    <div class="content-grid">
+      {items.map((item) => (
+        <article class="content-card">
+          {item.cover_photo && (
+            <StrapiImage
+              class="card-image"
+              src={item.cover_photo.url}
+              alt={item.cover_photo.alternativeText ?? item.title}
+              width={item.cover_photo.width}
+              height={item.cover_photo.height}
+              responsive={true}
+            />
+          )}
+          <div class="card-body">
+            <h3>{item.title}</h3>
+            <p>{'purpose' in item ? item.purpose : item.short_summary}</p>
+            <a href={isPlatforms ? `/platformy/${item.slug}` : `/projekty/${item.slug}`}>Zjistit více →</a>
+          </div>
+        </article>
+      ))}
+    </div>
+    {data.link && <SectionLink data={data.link} />}
+  </div>
+</section>
+
+<style>
+  .listing-section {
+    padding: 112px 40px;
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .listing-section + .listing-section { padding-top: 0; }
+
+  .projects-section {
+    background: #1e1e22;
+    color: #f4f1eb;
+  }
+
+  .section-inner {
+    width: min(100%, 1160px);
+    margin: 0 auto;
+  }
+
+  h2 {
+    margin: 0 0 40px;
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1.1;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .content-card {
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 12px;
+  }
+
+  .projects-section .content-card {
+    background: #2a2a30;
+  }
+
+  .card-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.35;
+  }
+
+  .card-body { padding: 24px; }
+  h3 { margin: 0; font-size: 22px; line-height: 1.2; }
+  .card-body p { margin: 16px 0 24px; line-height: 1.5; opacity: 0.72; }
+  .card-body a { color: #6e42d9; font-weight: 700; text-decoration: none; }
+
+  .projects-section .card-body a {
+    color: #8f63ff;
+  }
+
+  @media (max-width: 700px) {
+    .listing-section { padding: 72px 24px; }
+    .content-grid { grid-template-columns: 1fr; }
+  }
+</style>

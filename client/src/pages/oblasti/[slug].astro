@@ -1,0 +1,96 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+type Area = {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+};
+
+type AreaResponse = {
+  data: Area[];
+};
+
+export async function getStaticPaths() {
+  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const response = await fetch(new URL('/api/tag-areas?fields[0]=title&fields[1]=slug&fields[2]=description', baseApiUrl));
+
+  if (!response.ok) {
+    throw new Error(`Areas request failed: ${response.status}`);
+  }
+
+  const result = (await response.json()) as AreaResponse;
+
+  return result.data.map((area) => ({
+    params: { slug: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
+---
+
+<Layout>
+  <main class="area-page">
+    <div class="area-page-inner">
+      <a class="back-link" href="/">← Zpět na úvod</a>
+      <p class="eyebrow">Oblast</p>
+      <h1>{area.title}</h1>
+      {area.description && <p class="description">{area.description}</p>}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .area-page {
+    min-height: 100vh;
+    padding: 170px 40px 120px;
+    box-sizing: border-box;
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .area-page-inner {
+    width: min(100%, 960px);
+    margin: 0 auto;
+  }
+
+  .back-link {
+    color: #2d5a27;
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .eyebrow {
+    margin: 80px 0 20px;
+    color: #2d5a27;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1.05;
+  }
+
+  .description {
+    max-width: 700px;
+    margin: 36px 0 0;
+    font-size: 20px;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 700px) {
+    .area-page {
+      padding: 132px 24px 80px;
+    }
+
+    .eyebrow {
+      margin-top: 56px;
+    }
+  }
+</style>

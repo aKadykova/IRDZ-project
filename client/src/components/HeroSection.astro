@@ -1,0 +1,253 @@
+---
+import type { THeroBlock } from '../types';
+import StrapiImage from './StrapiImage.astro';
+
+interface Props {
+  data?: THeroBlock;
+}
+
+const { data } = Astro.props;
+const heading = data?.heading01 ?? '';
+const accent = data?.heading02?.trim() ?? '';
+const description = data?.text ?? 'Začínáme otázkami, na které dnešní praxe ještě nemá odpověď. S lidmi, odborníky a institucemi je měníme ve výzkum, pilotní projekty a nové přístupy, které mohou posunout způsob, jakým o duševní zdraví pečujeme.';
+const links = data?.links ?? [
+];
+const primaryLinks = links;
+---
+
+<section class="hero-section">
+  <div class="hero-glow hero-glow-top" aria-hidden="true"></div>
+  <div class="hero-glow hero-glow-bottom" aria-hidden="true"></div>
+
+  <div class="hero-layout">
+    <div class="hero-content">
+      <h1>
+        <span>{heading}</span>
+        <strong>{accent}</strong>
+      </h1>
+
+      <p class="hero-description">{description}</p>
+
+      <div class="hero-actions">
+        {primaryLinks.map((link) => (
+          <a href={link.href} class="hero-button">{link.label}</a>
+        ))}
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <!-- {data?.secondary_image && (
+        <StrapiImage
+          class="hero-image hero-image-secondary"
+          src={data.secondary_image.url}
+          alt={data.secondary_image.alternativeText ?? ''}
+          width={data.secondary_image.width}
+          height={data.secondary_image.height}
+          loading="eager"
+          responsive={false}
+        />
+      )} -->
+
+      {data?.primary_image && (
+        <StrapiImage
+          class="hero-image hero-image-primary"
+          src={data.primary_image.url}
+          alt={data.primary_image.alternativeText ?? ''}
+          width={data.primary_image.width}
+          height={data.primary_image.height}
+          loading="eager"
+          responsive={false}
+        />
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-section {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    padding: 170px 40px 90px;
+    box-sizing: border-box;
+    background: #1e1e22;
+    color: var(--color-text-light);
+    isolation: isolate;
+  }
+
+  .hero-layout {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 1160px);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: clamp(32px, 7vw, 110px);
+  }
+
+  .hero-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+  }
+
+  .hero-visual {
+    position: relative;
+    min-height: min(56vw, 600px);
+  }
+
+  .hero-image {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  }
+
+  .hero-image-secondary {
+    top: 0;
+    right: 0;
+    z-index: 1;
+    width: 70%;
+    aspect-ratio: 1.34;
+  }
+
+  .hero-image-primary {
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 70%;
+    aspect-ratio: 1.4;
+  }
+
+  h1 {
+    max-width: 760px;
+    margin: 0;
+    font-size: clamp(3rem, 4.5vw, 3.5rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  h1 span,
+  h1 strong {
+    display: block;
+  }
+
+  h1 strong {
+    color: #8f63ff;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  .hero-description {
+    max-width: 720px;
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(1rem, 1.45vw, 1.125rem);
+    line-height: 1.55;
+    letter-spacing: 0.05em;
+    opacity: 0.94;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 34px;
+  }
+
+  .hero-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 189px;
+    min-height: 52px;
+    padding: 0 24px;
+    box-sizing: border-box;
+    border: 1px solid #6e42d9;
+    border-radius: 8px;
+    color: var(--color-text-light);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .hero-button:hover {
+    border-color: #8f63ff;
+    background-color: rgba(143, 99, 255, 0.16);
+  }
+
+  .hero-glow {
+    position: absolute;
+    z-index: -1;
+    width: 520px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #6e42d9;
+    opacity: 0.18;
+    filter: blur(100px);
+    pointer-events: none;
+  }
+
+  .hero-glow-top {
+    top: -280px;
+    left: 28%;
+  }
+
+  .hero-glow-bottom {
+    right: -220px;
+    bottom: -300px;
+    background: #398c57;
+    opacity: 0.1;
+  }
+
+  @media (max-width: 700px) {
+    .hero-section {
+      padding: 132px 24px 64px;
+    }
+
+    .hero-layout {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .hero-content {
+      gap: 26px;
+    }
+
+    .hero-visual {
+      min-height: min(92vw, 460px);
+    }
+
+    .hero-image-secondary {
+      width: 88%;
+    }
+
+    .hero-image-primary {
+      width: 90%;
+    }
+
+    .hero-image {
+      opacity: 0.2;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 10vw, 3.5rem);
+    }
+
+    .hero-description {
+      font-size: 0.98rem;
+    }
+
+    .hero-actions {
+      gap: 12px;
+    }
+
+    .hero-button {
+      width: 100%;
+    }
+  }
+</style>

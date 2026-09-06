@@ -4,9 +4,11 @@
 :root {
 	--color-primary: #7EC695;
 	--color-primary-hover: #398C57;
+	--color-section-link: #2D5A27;
 	--color-text-light: #f4f1eb;
 	--color-text-white: #ffffff;
 	--color-light-overlay: rgba(244, 241, 235, 0.12);
+	--color-soft-black: #1e1e22;
 	--color-footer-background: #1e1e22;
 	--color-divider: rgba(255, 255, 255, 0.15);
 }

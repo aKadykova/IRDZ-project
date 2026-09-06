@@ -1,0 +1,206 @@
+---
+import type { TCardGridBlock } from '../types';
+import SectionLink from './SectionLink.astro';
+
+interface Props {
+  data: TCardGridBlock;
+}
+
+const { data } = Astro.props;
+const isAreas = data.card_variant.toLowerCase().includes('target');
+---
+
+<section class:list={['card-grid-section', { 'areas-section': isAreas, 'process-section': !isAreas }]}>
+  <div class="section-inner">
+    <h2>{data.title}</h2>
+
+    {isAreas ? (
+      <div class="area-grid">
+        {data.areas_cards.map((card) => (
+          <a class:list={['area-card', `area-${card.style}`, `area-${card.size}`]} href={`/oblasti/${card.area.slug}`}>
+            <span>{card.area.title}</span>
+            <p>{card.area.description}</p>
+            <span class="area-link">Detail oblasti →</span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="process-grid">
+        {data.cards.map((card) => (
+          <article class="process-card">
+            <span class="step">{card.heading}</span>
+            <h3>{card.subheading}</h3>
+            <p>{card.description}</p>
+          </article>
+        ))}
+      </div>
+    )}
+
+    {data.link && <SectionLink data={data.link} />}
+  </div>
+</section>
+
+<style>
+  .card-grid-section {
+    padding: 112px 40px;
+    background: #1e1e22;
+    color: #f4f1eb;
+  }
+
+  .areas-section {
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .process-section {
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .section-inner {
+    width: min(100%, 1160px);
+    margin: 0 auto;
+  }
+
+  h2 {
+    margin: 0 0 40px;
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .process-section h2 {
+    margin-bottom: 64px;
+  }
+
+  .process-grid{
+    display: grid;
+    gap: 10px;
+  }
+
+  .area-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .process-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+
+  .process-card,
+  .area-card {
+    min-height: 220px;
+    padding: 24px;
+    box-sizing: border-box;
+    border-radius: 12px;
+  }
+
+  .process-card {
+    text-align: center;
+  }
+
+  .step {
+    color: #5e8c56;
+    font-size: 4.5rem;
+    font-weight: 700;
+  }
+
+  h3 {
+    margin: 12px 0 12px;
+    font-size: 25px;
+  }
+
+  .process-card p {
+    margin: 0;
+    opacity: 0.75;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .area-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  }
+
+  .area-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    min-height: 250px;
+    color: #f4f1eb;
+    font-size: 22px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .area-card span {
+    font-size: 33px;
+    font-weight: 550;
+  }
+
+  .area-card .area-link {
+    margin-top: 14px;
+    font-size: 17px;
+    font-weight: 400;
+    text-decoration: underline;
+  }
+
+  .area-card p {
+    margin: 8px 0 0;
+    font-size: 17px;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+  .area-tall {
+    grid-row: span 2;
+    min-height: 376px;
+    padding-bottom: 5rem;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .area-standard {
+    grid-row: span 1;
+    min-height: 250px;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .area-wide { grid-column: span 2; 
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    text-color: var(--color-soft-black);
+
+    span, p, .area-link {
+      color: var(--color-soft-black);
+    }
+}
+
+  .area-wide > span,
+  .area-wide > p {
+    max-width: 320px;
+  }
+
+  .area-wide > .area-link {
+    max-width: 320px;
+  }
+
+  .area-dark-green { background: #32462F; }
+  .area-light-green { background: #5E8C56; color: var(--color-text-light); }
+  .area-white {
+    background: var(--color-text-light);
+    border: #32462F 1px solid;
+    color: #1e1e22;
+  }
+  .area-image-bg { background: #6e42d9; }
+
+  @media (max-width: 700px) {
+    .card-grid-section { padding: 72px 24px; }
+    .area-wide { grid-column: auto; }
+    .area-tall,
+    .area-standard { grid-row: auto; min-height: 180px; }
+  }
+</style>
