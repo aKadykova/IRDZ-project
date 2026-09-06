@@ -1,0 +1,182 @@
+{
+  "collectionName": "components_blocks_heading_sections",
+  "info": {
+    "displayName": "Listing Section"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "anchror_link": {
+      "type": "string",
+      "required": true
+    },
+    "target": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "articles",
+        "events",
+        "projects",
+        "platforms",
+        "team members"
+      ]
+    },
+    "show_tag_area_filter": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_target_group_filter": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_year_filter": {
+      "type": "boolean",
+      "conditions": {
+        "visible": {
+          "!=": [
+            {
+              "var": "target"
+            },
+            "platforms"
+          ]
+        }
+      },
+      "default": true
+    },
+    "show_status_filter": {
+      "type": "boolean",
+      "conditions": {
+        "visible": {
+          "!=": [
+            {
+              "var": "target"
+            },
+            "articles"
+          ]
+        }
+      },
+      "default": true
+    },
+    "show_current_activities_filter": {
+      "type": "boolean",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "target"
+            },
+            "platforms"
+          ]
+        }
+      },
+      "default": true
+    },
+    "link": {
+      "type": "component",
+      "component": "shared.link",
+      "repeatable": false
+    },
+    "projects": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::project.project",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "selection_mode_projects"
+            },
+            "manual"
+          ]
+        }
+      }
+    },
+    "innovation_platforms": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::innovation-platform.innovation-platform",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "selection_mode_plattforms"
+            },
+            "manual"
+          ]
+        }
+      }
+    },
+    "articles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::article.article",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "target"
+            },
+            "articles"
+          ]
+        }
+      }
+    },
+    "team_members": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::team-member.team-member",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "target"
+            },
+            "team members"
+          ]
+        }
+      }
+    },
+    "selection_mode_projects": {
+      "type": "enumeration",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "target"
+            },
+            "projects"
+          ]
+        }
+      },
+      "required": true,
+      "enum": [
+        "all",
+        "latest",
+        "manual"
+      ]
+    },
+    "selection_mode_platforms": {
+      "type": "enumeration",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "target"
+            },
+            "platforms"
+          ]
+        }
+      },
+      "required": true,
+      "enum": [
+        "all",
+        "latest",
+        "manual"
+      ]
+    }
+  },
+  "config": {}
+}

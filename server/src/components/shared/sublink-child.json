@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_shared_sublink_children",
+  "info": {
+    "displayName": "Sublink child"
+  },
+  "options": {},
+  "attributes": {
+    "href": {
+      "type": "text"
+    },
+    "link": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

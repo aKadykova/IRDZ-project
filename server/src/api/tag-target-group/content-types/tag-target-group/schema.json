@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tag_target_groups",
+  "info": {
+    "singularName": "tag-target-group",
+    "pluralName": "tag-target-groups",
+    "displayName": "Tag Target group "
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
+    },
+    "description": {
+      "type": "text"
+    },
+    "projects": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::project.project",
+      "mappedBy": "target_groups"
+    },
+    "innovation_platforms": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::innovation-platform.innovation-platform",
+      "mappedBy": "target_groups"
+    }
+  }
+}

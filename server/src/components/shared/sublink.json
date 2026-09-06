@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_shared_sublinks",
+  "info": {
+    "displayName": "Sublink"
+  },
+  "options": {},
+  "attributes": {
+    "href": {
+      "type": "text"
+    },
+    "label": {
+      "type": "string"
+    },
+    "isExternal": {
+      "type": "boolean",
+      "default": false
+    },
+    "subchildren": {
+      "type": "component",
+      "component": "shared.sublink-child",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

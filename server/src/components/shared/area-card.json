@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_shared_area_cards",
+  "info": {
+    "displayName": "Area Card"
+  },
+  "options": {},
+  "attributes": {
+    "area": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::tag-area.tag-area"
+    },
+    "size": {
+      "type": "enumeration",
+      "enum": [
+        "standard",
+        "tall",
+        "wide"
+      ]
+    },
+    "style": {
+      "type": "enumeration",
+      "enum": [
+        "dark-green",
+        "light-green",
+        "white",
+        "image-bg"
+      ]
+    }
+  },
+  "config": {}
+}

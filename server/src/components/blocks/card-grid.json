@@ -1,0 +1,58 @@
+{
+  "collectionName": "components_blocks_card_grids",
+  "info": {
+    "displayName": "Card grid",
+    "icon": "clock"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "card_variant": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "default",
+        "target area "
+      ]
+    },
+    "areas_cards": {
+      "type": "component",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "card_variant"
+            },
+            "target area "
+          ]
+        }
+      },
+      "component": "shared.area-card",
+      "repeatable": true
+    },
+    "cards": {
+      "type": "component",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "card_variant"
+            },
+            "default"
+          ]
+        }
+      },
+      "component": "shared.card",
+      "repeatable": true
+    },
+    "link": {
+      "type": "component",
+      "component": "shared.link",
+      "repeatable": false
+    }
+  },
+  "config": {}
+}

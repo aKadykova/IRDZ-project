@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tag_areas",
+  "info": {
+    "singularName": "tag-area",
+    "pluralName": "tag-areas",
+    "displayName": "Tag Area"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "projects": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::project.project",
+      "mappedBy": "theme_areas"
+    },
+    "innovation_platforms": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::innovation-platform.innovation-platform",
+      "mappedBy": "tag_areas"
+    }
+  }
+}
