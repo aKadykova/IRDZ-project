@@ -1,3 +1,47 @@
+---
+import type { TGlobalAttributes } from '../types';
+import '../styles/global.css';
+
+type TStrapiResponse<T> = {
+	data: T;
+	error?: {
+		status: number;
+		name: string;
+		message: string;
+		details?: Record<string, string[]>;
+	};
+	meta?: {
+		pagination: {
+			page: number;
+			pageSize: number;
+			pageCount: number;
+			total: number;
+		};
+	};
+};
+
+const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+
+async function getStrapiGlobalData(): Promise<TStrapiResponse<TGlobalAttributes>> {
+	const url = new URL('/api/global', baseApiUrl);
+	const response = await fetch(url);
+	const data = (await response.json()) as TStrapiResponse<TGlobalAttributes>;
+
+	if (!response.ok) {
+		throw new Error(data.error?.message ?? `Strapi request failed: ${response.status}`);
+	}
+
+	return data;
+}
+
+const globalData = await getStrapiGlobalData();
+const { header, footer } = globalData.data;
+
+const addressText = footer?.address
+	?.map((block) => block.children.map((child) => child.text).join(''))
+	.join('\n');
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -9,7 +53,66 @@
 		<title>Astro Basics</title>
 	</head>
 	<body>
-		<slot />
+		<div class="header">
+			{header.map((headerData) => (
+				<header>
+					{headerData.logo?.image && (
+						<a href={headerData.logo.href}>
+							<img
+								src={new URL(headerData.logo.image.url, baseApiUrl).href}
+								alt={headerData.logo.image.alternativeText ?? headerData.logo.label}
+								width={headerData.logo.image.width}
+								height={headerData.logo.image.height}
+							/>
+						</a>
+					)}
+					<nav aria-label="Main navigation">
+						<ul>
+							{headerData.navItems.map((item) => (
+								<li>
+									<a href={item.href}>{item.label}</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+				</header>
+			))}
+		</div>
+		<div class="footer">
+			{footer && (
+				<footer>
+					{footer.column.length > 0 && (
+						<div class="footer-columns">
+							{footer.column.map((column) => (
+								<section>
+									<h2>{column.title}</h2>
+									<ul>
+										{column.links.map((link) => (
+											<li>
+												<a href={link.href}>{link.label}</a>
+											</li>
+										))}
+									</ul>
+								</section>
+							))}
+						</div>
+					)}
+					{addressText && <p>{addressText}</p>}
+					{footer.copyrightText && <small>{footer.copyrightText}</small>}
+					{footer.bottomLinks.length > 0 && (
+						<nav aria-label="Footer navigation">
+							<ul>
+								{footer.bottomLinks.map((link) => (
+									<li>
+										<a href={link.href}>{link.label}</a>
+									</li>
+								))}
+							</ul>
+						</nav>
+					)}
+				</footer>
+			)}
+		</div>
 	</body>
 </html>
 
