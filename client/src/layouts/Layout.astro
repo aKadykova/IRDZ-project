@@ -1,14 +1,70 @@
+---
+import type { TGlobalAttributes } from '../types';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+type TStrapiResponse<T> = {
+	data: T;
+	error?: {
+		status: number;
+		name: string;
+		message: string;
+		details?: Record<string, string[]>;
+	};
+	meta?: {
+		pagination: {
+			page: number;
+			pageSize: number;
+			pageCount: number;
+			total: number;
+		};
+	};
+};
+
+const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+
+async function getStrapiGlobalData(): Promise<TStrapiResponse<TGlobalAttributes>> {
+	const url = new URL('/api/global', baseApiUrl);
+	const response = await fetch(url);
+	const data = (await response.json()) as TStrapiResponse<TGlobalAttributes>;
+
+	if (!response.ok) {
+		throw new Error(data.error?.message ?? `Strapi request failed: ${response.status}`);
+	}
+
+	return data;
+}
+
+const globalData = await getStrapiGlobalData();
+const { header, footer } = globalData.data;
+
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro Basics</title>
 	</head>
-	<body>
+	<body class="manrope">
+		{header[0] && (
+			<div class="box">
+				<Header data={header[0]} />
+			</div>
+		)}
+
+		{footer && (
+			<div class="box">
+				<Footer data={footer} />
+			</div>
+		)}
 		<slot />
 	</body>
 </html>

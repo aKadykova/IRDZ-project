@@ -1,0 +1,125 @@
+---
+import type { THeaderData } from '../types';
+import ButtonLink from './ButtonLink.astro';
+
+interface Props {
+  data?: THeaderData;
+};
+
+const { data } = Astro.props;
+
+const logoHref = data?.logo?.href || "/";
+const homeLink = { label: 'Home', href: '/' };
+const defaultNavItems = [
+  { label: 'Home', href: '/' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+];
+const navItems = data?.navItems?.length
+  ? [homeLink, ...data.navItems.filter((item) => item.href !== '/')]
+  : defaultNavItems;
+const cta = data?.cta || {
+  href: '/kontakt?type=spoluprace',
+  label: 'Začněme spolupráci',
+  type: 'primary' as const,
+  isExternal: false,
+  isButtonLink: true,
+};
+---
+
+<header class="site-header">
+  <div class="header-container">
+    <!-- Логотип -->
+    <a href={logoHref} class="logo">
+      {/*
+      {data?.logo?.image?.url ? (
+        <StrapiImage
+          class="logo-img"
+          src={data.logo.image.url}
+          alt={data.logo.image.alternativeText ?? logoText}
+          width={120}
+          height={36}
+          loading="eager"
+          responsive={false}
+        />
+      ) : (
+        <span>{logoText}</span>
+      )}
+      */}
+      <span>IRDZ</span>
+    </a>
+
+    <!-- Навігаційне меню -->
+    <nav class="nav-menu">
+      {navItems.map((item) => (
+        <a href={item.href} class="nav-link">
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <ButtonLink data={cta} />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    width: 100%;
+    height: 74px;
+    background-color: transparent; /* або колір вашого фону */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+
+  .header-container {
+    width: 100%;
+    max-width: 1440px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    color: var(--color-text-light);
+    font-size: 32px;
+    font-weight: 800;
+    text-decoration: none;
+    letter-spacing: 0em;
+  }
+
+  .logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+  }
+
+
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .nav-link {
+    color: var(--color-text-light);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 0.6; /* opacity 0.5 з фігми робимо трохи виразнішою */
+    transition: opacity 0.2s ease, color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    opacity: 1;
+  }
+
+
+  @media (max-width: 1024px) {
+    .nav-menu {
+      display: none; 
+    }
+  }
+</style>
