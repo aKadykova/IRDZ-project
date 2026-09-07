@@ -109,6 +109,16 @@ export type TProjectTag = {
   slug: string;
 };
 
+export type TTeamMember = {
+  id: number;
+  documentId?: string;
+  fullName: string;
+  profileSlug?: string;
+  jobTitle: string;
+  email?: string | null;
+  photo?: TStrapiImage | null;
+};
+
 export type TProject = {
   id: number;
   documentId: string;
@@ -121,8 +131,17 @@ export type TProject = {
   show_on_homepage: boolean;
   homepage_order: number;
   cover_photo: TStrapiImage | null;
+  gallery: TStrapiImage[];
   theme_areas: TProjectTag[];
   target_groups: TProjectTag[];
+  objective: string | null;
+  phases: string | null;
+  results: string | null;
+  description: string | null;
+  initial_situation: string | null;
+  ways_to_get_involved: string | null;
+  team_members: TTeamMember[];
+  public_contact: TTeamMember | null;
 };
 
 export type TInnovationPlatform = {

@@ -1,261 +1,177 @@
 ---
-import type { TProject, TLandingBlock } from '../../types';
 import Layout from '../../layouts/Layout.astro';
-import CardGrid from '../../components/CardGrid.astro';
-import HeroSection from '../../components/HeroSection.astro';
-import ListingSection from '../../components/ListingSection.astro';
-import ThinkingSection from '../../components/ThinkingSection.astro';
+import type { TProject } from '../../types';
+
+type Area = {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+};
+
+type AreaResponse = {
+  data: Area[];
+};
+
+type ProjectsResponse = {
+  data: TProject[];
+};
+
+export async function getStaticPaths() {
+  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const response = await fetch(new URL('/api/tag-areas?fields[0]=title&fields[1]=slug&fields[2]=description', baseApiUrl));
+
+  if (!response.ok) {
+    throw new Error(`Areas request failed: ${response.status}`);
+  }
+
+  const result = (await response.json()) as AreaResponse;
+
+  return result.data.map((area) => ({
+    params: { slug: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
 
 const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
 
-// 1. Отримуємо динамічні блоки сторінки "projekty" зі Strapi (Dynamic Zones)
-let pageBlocks: TLandingBlock[] = [];
-try {
-  const pageRes = await fetch(`${baseApiUrl}/api/projects-page?populate=deep`);
-  if (pageRes.ok) {
-    const pageJson = await pageRes.json();
-    pageBlocks = pageJson?.data?.attributes?.blocks ?? pageJson?.data?.blocks ?? [];
-  }
-} catch (error) {
-  console.error('Failed to fetch projects page blocks:', error);
-}
+const projectsQuery = new URLSearchParams({
+  'filters[theme_areas][slug][$eq]': area.slug,
+  'populate[cover_photo]': 'true',
+});
 
-// 2. Отримуємо список усіх проектів для сітки картки та фільтрів
-const res = await fetch(`${baseApiUrl}/api/projects?populate=*`);
-const json = await res.json();
-const projects: TProject[] = (json?.data ?? []).map((entry: any) => ({
+const projectsRes = await fetch(`${baseApiUrl}/api/projects?${projectsQuery.toString()}`);
+const projectsJson = (await projectsRes.json()) as ProjectsResponse;
+
+const projects: TProject[] = (projectsJson?.data ?? []).map((entry: any) => ({
   id: entry.id,
-  ...(entry.attributes ?? entry), // підтримка Strapi v4 та v5
+  ...(entry.attributes ?? entry),
 }));
 
-// ---- Збір унікальних даних для фільтрів ----
-const allThemeAreas = Array.from(
-  new Map(
-    projects.flatMap((p) => p.theme_areas ?? []).map((a) => [a.slug, a]),
-  ).values(),
-);
-
-const allTargetGroups = Array.from(
-  new Map(
-    projects.flatMap((p) => p.target_groups ?? []).map((g) => [g.slug, g]),
-  ).values(),
-);
-
-const allYears = Array.from(
-  new Set(
-    projects
-      .map((p) => (p.start_date ? new Date(p.start_date).getFullYear() : null))
-      .filter((y): y is number => y !== null),
-  ),
-).sort((a, b) => b - a);
-
-const allStatuses = Array.from(
-  new Set(projects.map((p) => p.project_status).filter(Boolean)),
-);
-
-const cardVariants = ['dark'] as const;
+const cardVariants = ['light', 'dark', 'green'] as const;
 ---
 
 <Layout>
-  <!-- РЕНДЕР ДИНАМІЧНИХ БЛОКІВ З УМОВОЮ SELECTION_MODE -->
-  {
-    pageBlocks.map((block: any) => {
-      // Якщо це card-grid, показуємо ЛИШЕ коли selection_mode дорівнює 'latest' або 'manual'
-      if (block.__component === 'blocks.card-grid') {
-        const isValidMode = block.selection_mode === 'latest' || block.selection_mode === 'manual';
-        return isValidMode ? <CardGrid data={block} /> : null;
-      }
+  <main class="area-page">
+    <div class="area-page-inner">
+      <a class="back-link" href="/">← Zpět na úvod</a>
+      <p class="eyebrow">Oblast</p>
+      <h1>{area.title}</h1>
+      {area.description && <p class="description">{area.description}</p>}
 
-      if (block.__component === 'blocks.hero') {
-        return <HeroSection data={block} />;
-      }
-
-      if (block.__component === 'blocks.heading-section') {
-        return block.target === 'projects' ? <ListingSection data={block} /> : null;
-      }
-
-      if (block.__component === 'blocks.jak-premyslime-section') {
-        return <ThinkingSection data={block} />;
-      }
-
-      return null;
-    })
-  }
-
-  <!-- СЕКЦІЯ ВСІХ ПРОЕКТІВ З ФІЛЬТРАЦІЄЮ -->
-  <section class="listing-section projects-section">
-    <div class="section-inner">
-      <h2>Všechny projekty</h2>
-
-      <div class="filters">
-        {allThemeAreas.length > 0 && (
-          <select class="filter-select" data-filter="theme_area">
-            <option value="">Všechny oblasti</option>
-            {allThemeAreas.map((area) => (
-              <option value={area.slug}>{area.title}</option>
-            ))}
-          </select>
-        )}
-
-        {allTargetGroups.length > 0 && (
-          <select class="filter-select" data-filter="target_group">
-            <option value="">Všechny cílové skupiny</option>
-            {allTargetGroups.map((group) => (
-              <option value={group.slug}>{group.title}</option>
-            ))}
-          </select>
-        )}
-
-        {allYears.length > 0 && (
-          <select class="filter-select" data-filter="year">
-            <option value="">Všechny roky</option>
-            {allYears.map((year) => (
-              <option value={year}>{year}</option>
-            ))}
-          </select>
-        )}
-
-        {allStatuses.length > 0 && (
-          <select class="filter-select" data-filter="status">
-            <option value="">Všechny stavy</option>
-            {allStatuses.map((status) => (
-              <option value={status}>{status}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <div class="content-grid" id="projects-grid">
-        {projects.map((item, index) => (
-          <article
-            class:list={[
-              'content-card',
-              `content-card--${cardVariants[index % cardVariants.length]}`,
-              { 'content-card-no-image': !item.cover_photo }
-            ]}
-            data-theme-areas={item.theme_areas?.map((a) => a.slug).join(',') ?? ''}
-            data-target-groups={item.target_groups?.map((g) => g.slug).join(',') ?? ''}
-            data-year={item.start_date ? new Date(item.start_date).getFullYear() : ''}
-            data-status={item.project_status ?? ''}
-          >
-            {item.cover_photo && (
-              <img
-                class="card-image"
-                src={item.cover_photo.url}
-                alt={item.cover_photo.alternativeText ?? item.title}
-                width={item.cover_photo.width}
-                height={item.cover_photo.height}
-              />
-            )}
-            <div class="card-body">
-              {(item.theme_areas?.length > 0 || (item.start_date && item.end_date)) && (
-                <div class="tags">
-                  {item.theme_areas?.map((tag) => (
-                    <span class="tag">{tag.title}</span>
-                  ))}
-                  {item.start_date && item.end_date && (
-                    <span class="tag">
-                      {new Date(item.start_date).getFullYear()}–{new Date(item.end_date).getFullYear()}
-                    </span>
-                  )}
+      {projects.length > 0 && (
+        <section class="area-projects">
+          <h2>Projekty v této oblasti</h2>
+          <div class:list={['content-grid', `content-grid-${projects.length}`]}>
+            {projects.map((item, index) => (
+              <article
+                class:list={[
+                  'content-card',
+                  `content-card--${cardVariants[index % cardVariants.length]}`,
+                  { 'content-card-no-image': !item.cover_photo },
+                ]}
+              >
+                {item.cover_photo && (
+                  <img
+                    class="card-image"
+                    src={item.cover_photo.url}
+                    alt={item.cover_photo.alternativeText ?? item.title}
+                    width={item.cover_photo.width}
+                    height={item.cover_photo.height}
+                  />
+                )}
+                <div class="card-body">
+                  <h3>{item.title}</h3>
+                  <p>{item.short_summary}</p>
+                  <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
                 </div>
-              )}
-              <h3>{item.title}</h3>
-              <p>{item.short_summary}</p>
-              <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <p class="empty-state" id="empty-state" hidden>Žádné projekty neodpovídají zvoleným filtrům.</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
-  </section>
+  </main>
 </Layout>
 
-<script>
-  const grid = document.getElementById('projects-grid');
-  const emptyState = document.getElementById('empty-state');
-  const selects = document.querySelectorAll<HTMLSelectElement>('.filter-select');
-
-  function applyFilters() {
-    if (!grid) return;
-    const values: Record<string, string> = {};
-    selects.forEach((select) => {
-      const key = select.dataset.filter;
-      if (key) values[key] = select.value;
-    });
-
-    let visibleCount = 0;
-
-    grid.querySelectorAll<HTMLElement>('.content-card').forEach((card) => {
-      const themeAreas = (card.dataset.themeAreas ?? '').split(',');
-      const targetGroups = (card.dataset.targetGroups ?? '').split(',');
-      const year = card.dataset.year ?? '';
-      const status = card.dataset.status ?? '';
-
-      const matches =
-        (!values.theme_area || themeAreas.includes(values.theme_area)) &&
-        (!values.target_group || targetGroups.includes(values.target_group)) &&
-        (!values.year || year === values.year) &&
-        (!values.status || status === values.status);
-
-      card.hidden = !matches;
-      if (matches) visibleCount += 1;
-    });
-
-    if (emptyState) emptyState.hidden = visibleCount > 0;
-  }
-
-  selects.forEach((select) => select.addEventListener('change', applyFilters));
-</script>
-
 <style>
-  .listing-section {
-    padding: 112px 40px;
-    background: #f4f1eb;
-    color: #1e1e22;
+  .area-page {
+    min-height: 100vh;
+    padding: 170px 40px 120px;
+    box-sizing: border-box;
+    background:#f4f1eb
+    color: var(--color-text-light);
   }
 
-  .projects-section {
-    background: #1e1e22;
-    color: #f4f1eb;
-  }
-
-  .section-inner {
+  .area-page-inner {
     width: min(100%, 1160px);
     margin: 0 auto;
   }
 
-  h2 {
+  .back-link {
+    color: #2d5a27;
+    font-size: 20px;
+    text-decoration: none;
+  }
+
+  .eyebrow {
+    margin: 80px 0 20px;
+    color: #2d5a27;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1.05;
+  }
+
+  .description {
+    max-width: 700px;
+    margin: 36px 0 0;
+    font-size: 20px;
+    line-height: 1.55;
+  }
+
+  .area-projects {
+    margin-top: 96px;
+  }
+
+  .area-projects h2 {
     margin: 0 0 40px;
     font-size: clamp(2rem, 4vw, 4rem);
     line-height: 1.1;
-    text-align: center;
   }
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 48px;
-  }
-
-  .filter-select {
-    padding: 10px 16px;
-    border-radius: 999px;
-    border: 1px solid currentColor;
-    background: transparent;
-    color: inherit;
-    font-size: 15px;
-    font-family: inherit;
-  }
+  /* ---- grid + featured-first-card pattern, same as HeadingSectionBlock ---- */
 
   .content-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
+  }
+
+  .content-grid-1,
+  .content-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 .content-card:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(220px, 38%) minmax(0, 1fr);
+  }
+
+  .content-grid-3 .content-card:first-child .card-image {
+    height: 100%;
   }
 
   .content-card {
@@ -269,17 +185,39 @@ const cardVariants = ['dark'] as const;
     grid-template-columns: 1fr;
   }
 
+  .content-grid-3 .content-card-no-image:first-child {
+    grid-template-columns: 1fr;
+  }
+
   .content-card-no-image .card-body {
     min-height: 220px;
   }
 
+  .content-card--light {
+    background: #f4f1eb;
+    color: var(--color-soft-black);
+  }
+
+  .content-card--light .card-body a {
+    color: var(--color-soft-black);
+  }
+
   .content-card--dark {
-    background: #32462F;
+    background: #2a2a30;
     color: #f4f1eb;
   }
 
   .content-card--dark .card-body a {
-    color: #f4f1eb;
+    color: var(--color-text-light);
+  }
+
+  .content-card--green {
+    background: var(--color-primary);
+    color: #eef4f0;
+  }
+
+  .content-card--green .card-body a {
+    color: var(--color-text-light);
   }
 
   .card-image {
@@ -289,38 +227,44 @@ const cardVariants = ['dark'] as const;
     object-fit: cover;
   }
 
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 16px;
-  }
-
-  .tag {
-    display: inline-block;
-    padding: 4px 12px;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 400;
-    opacity: 0.72;
-  }
-
   .card-body { padding: 32px; }
-  h3 { margin: 0 0 16px; font-size: 24px; line-height: 1.2; font-weight: 500; }
-  .card-body p { margin: 0 0 24px; line-height: 1.5; opacity: 0.72; font-size: 16px; }
-  .card-body a { font-weight: 700; text-decoration: none; }
 
-  .empty-state {
-    text-align: center;
-    opacity: 0.7;
-    margin-top: 48px;
+  .card-body h3 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  .card-body p {
+    margin: 0 0 20px;
+    line-height: 1.5;
+    opacity: 0.72;
+    font-size: 16px;
+  }
+
+  .card-body a {
+    font-weight: 700;
+    text-decoration: none;
   }
 
   @media (max-width: 700px) {
-    .listing-section { padding: 72px 24px; }
+    .area-page {
+      padding: 132px 24px 80px;
+    }
+
+    .eyebrow {
+      margin-top: 56px;
+    }
+
     .content-grid { grid-template-columns: 1fr; }
-    .content-card { grid-template-columns: 1fr; }
-    .card-image { height: 220px; }
+    .content-card,
+    .content-grid-3 .content-card:first-child {
+      grid-template-columns: 1fr;
+    }
+    .card-image,
+    .content-grid-3 .content-card:first-child .card-image {
+      height: 220px;
+    }
   }
 </style>

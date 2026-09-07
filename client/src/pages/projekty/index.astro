@@ -35,6 +35,8 @@ const allYears = Array.from(
   ),
 ).sort((a, b) => b - a);
 
+console.log(allYears);
+
 const allStatuses = Array.from(
   new Set(projects.map((p) => p.project_status).filter(Boolean)),
 );
@@ -49,41 +51,36 @@ const cardVariants = ['dark'] as const;
     <h2>Všechny projekty</h2>
 
     <div class="filters">
-      {allThemeAreas.length > 0 && (
-        <select class="filter-select" data-filter="theme_area">
+      <select class="filter-select" data-filter="theme_area">
           <option value="">Všechny oblasti</option>
           {allThemeAreas.map((area) => (
             <option value={area.slug}>{area.title}</option>
           ))}
         </select>
-      )}
 
-      {allTargetGroups.length > 0 && (
-        <select class="filter-select" data-filter="target_group">
+      <select class="filter-select" data-filter="target_group">
           <option value="">Všechny cílové skupiny</option>
           {allTargetGroups.map((group) => (
             <option value={group.slug}>{group.title}</option>
           ))}
         </select>
-      )}
+      
 
-      {allYears.length > 0 && (
-        <select class="filter-select" data-filter="year">
+      
+      <select class="filter-select" data-filter="year">
           <option value="">Všechny roky</option>
           {allYears.map((year) => (
             <option value={year}>{year}</option>
           ))}
         </select>
-      )}
 
-      {allStatuses.length > 0 && (
-        <select class="filter-select" data-filter="status">
+      <select class="filter-select" data-filter="status">
           <option value="">Všechny stavy</option>
           {allStatuses.map((status) => (
             <option value={status}>{status}</option>
           ))}
         </select>
-      )}
+    
     </div>
 
     <div class="content-grid" id="projects-grid">
@@ -95,15 +92,6 @@ const cardVariants = ['dark'] as const;
           data-year={item.start_date ? new Date(item.start_date).getFullYear() : ''}
           data-status={item.project_status ?? ''}
         >
-          {item.cover_photo && (
-            <img
-              class="card-image"
-              src={item.cover_photo.url}
-              alt={item.cover_photo.alternativeText ?? item.title}
-              width={item.cover_photo.width}
-              height={item.cover_photo.height}
-            />
-          )}
           <div class="card-body">
             {(item.theme_areas?.length > 0 || (item.start_date && item.end_date)) && (
               <div class="tags">
@@ -219,14 +207,9 @@ const cardVariants = ['dark'] as const;
   }
 
   .content-card {
-    display: grid;
-    grid-template-columns: minmax(180px, 32%) minmax(0, 1fr);
+    display: block;
     overflow: hidden;
     border-radius: 12px;
-  }
-
-  .content-card-no-image {
-    grid-template-columns: 1fr;
   }
 
   .content-card-no-image .card-body {
@@ -234,19 +217,12 @@ const cardVariants = ['dark'] as const;
   }
 
   .content-card--dark {
-    background: #32462F;
+    background: var(--color-primary);
     color: #f4f1eb;
   }
 
   .content-card--dark .card-body a {
     color: #f4f1eb;
-  }
-
-  .card-image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 
   .tags {
@@ -280,7 +256,5 @@ const cardVariants = ['dark'] as const;
   @media (max-width: 700px) {
     .listing-section { padding: 72px 24px; }
     .content-grid { grid-template-columns: 1fr; }
-    .content-card { grid-template-columns: 1fr; }
-    .card-image { height: 220px; }
   }
 </style>

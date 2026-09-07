@@ -1,0 +1,331 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import type { TProject, TStrapiImage } from '../../types';
+import StrapiImage from '../../components/StrapiImage.astro';
+
+type ProjectsListResponse = {
+  data: Pick<TProject, 'slug'>[];
+};
+
+type ProjectDetailResponse = {
+  data: TProject[];
+};
+
+export async function getStaticPaths() {
+  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const response = await fetch(new URL('/api/projects?fields[0]=slug', baseApiUrl));
+
+  if (!response.ok) {
+    throw new Error(`Projects request failed: ${response.status}`);
+  }
+
+  const result = (await response.json()) as ProjectsListResponse;
+
+  return result.data.map((entry: any) => {
+    const slug = (entry.attributes ?? entry).slug;
+    return { params: { slug } };
+  });
+}
+
+const { slug } = Astro.params;
+
+const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+
+const projectQuery = new URLSearchParams({
+  'filters[slug][$eq]': slug ?? '',
+  'populate[cover_photo]': 'true',
+  'populate[gallery]': 'true',
+  'populate[theme_areas]': 'true',
+  'populate[target_groups]': 'true',
+});
+
+const projectRes = await fetch(`${baseApiUrl}/api/projects?${projectQuery.toString()}`);
+
+if (!projectRes.ok) {
+  throw new Error(`Project request failed: ${projectRes.status}`);
+}
+
+const projectJson = (await projectRes.json()) as ProjectDetailResponse;
+const raw = projectJson?.data?.[0];
+
+if (!raw) {
+  throw new Error(`Project with slug "${slug}" not found`);
+}
+
+const project: TProject = {
+  id: raw.id,
+  ...((raw as any).attributes ?? raw),
+};
+
+const startYear = project.start_date ? new Date(project.start_date).getFullYear() : null;
+const endYear = project.end_date ? new Date(project.end_date).getFullYear() : null;
+---
+
+<Layout>
+  <main class="project-hero">
+    <div class="project-hero-inner">
+      <a class="back-link" href="/projekty">← Zpět na projekty</a>
+      <p class="eyebrow">Projekt</p>
+      <h1>{project.title}</h1>
+
+      {(project.theme_areas?.length > 0 || project.target_groups?.length > 0 || (startYear && endYear)) && (
+        <div class="tags">
+          {project.theme_areas?.map((tag) => (
+            <span class="tag">{tag.title}</span>
+          ))}
+          {project.target_groups?.map((group) => (
+            <span class="tag">{group.title}</span>
+          ))}
+          {startYear && endYear && <span class="tag">{startYear}–{endYear}</span>}
+          {project.project_status && <span class="tag">{project.project_status}</span>}
+        </div>
+      )}
+
+      {project.short_summary && <p class="description">{project.short_summary}</p>}
+    </div>
+  </main>
+
+  {project.cover_photo && (
+    <div class="project-cover-band">
+      <div class="project-cover">
+        <StrapiImage
+          src={project.cover_photo.url}
+          alt={project.cover_photo.alternativeText ?? project.title}
+          width={project.cover_photo.width}
+          height={project.cover_photo.height}
+        />
+      </div>
+    </div>
+  )}
+
+  <section class="project-content">
+    <div class="project-content-inner">
+      {project.initial_situation && (
+        <article class="content-block">
+          <h2>Výchozí situace</h2>
+          <p>{project.initial_situation}</p>
+        </article>
+      )}
+
+      {project.objective && (
+        <article class="content-block">
+          <h2>Cíl projektu</h2>
+          <p>{project.objective}</p>
+        </article>
+      )}
+
+      {project.phases && (
+        <article class="content-block">
+          <h2>Fáze projektu</h2>
+          <p>{project.phases}</p>
+        </article>
+      )}
+
+      {project.results && (
+        <article class="content-block">
+          <h2>Výsledky</h2>
+          <p>{project.results}</p>
+        </article>
+      )}
+
+      {project.ways_to_get_involved && (
+        <article class="content-block">
+          <h2>Jak se zapojit</h2>
+          <p>{project.ways_to_get_involved}</p>
+        </article>
+      )}
+    </div>
+  </section>
+
+  {project.gallery && project.gallery.length > 0 && (
+    <section class="project-gallery">
+      <div class="project-gallery-inner">
+        <h2>Galerie</h2>
+        <div class="gallery-grid">
+          {project.gallery.map((image) => (
+            <img
+              class="gallery-image"
+              src={image.url}
+              alt={image.alternativeText ?? project.title}
+              width={image.width}
+              height={image.height}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  .project-hero {
+    padding: 120px 40px 64px; 
+    background: #1e1e22;
+    color: var(--color-text-light, #ffffff);
+  }
+
+  .project-hero-inner {
+    width: min(100%, 960px);
+    margin: 0 auto;
+  }
+
+  .back-link {
+    color: #2d5a27;
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .eyebrow {
+    margin: 40px 0 16px; 
+    color: #2d5a27;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 24px;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 1.05;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 24px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.72;
+  }
+
+  .description {
+    max-width: 700px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.55;
+  }
+
+  .project-cover-band {
+    width: 100%;
+    padding: 0 40px;
+    box-sizing: border-box;
+    background: #f4f1eb;
+  }
+
+  .project-cover {
+    width: min(100%, 960px);
+    max-height: 380px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f4f1eb;
+  }
+
+.project-cover :global(img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  object-position: center bottom !important; 
+  transform: scale(1.15);
+  transform-origin: center bottom; 
+}
+
+  
+  .project-content {
+    padding: 64px 40px;
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .project-content-inner {
+    width: min(100%, 800px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .content-block h2 {
+    margin: 0 0 12px;
+    font-size: clamp(1.4rem, 2vw, 1.8rem);
+    line-height: 1.2;
+  }
+
+  .content-block p {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  
+  .project-gallery {
+    padding: 64px 40px;
+    background: #1e1e22;
+    color: #1e1e22;
+  }
+
+  .project-gallery-inner {
+    width: min(100%, 960px); 
+    margin: 0 auto;
+  }
+
+  .project-gallery h2 {
+    margin: 0 0 28px;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    line-height: 1.1;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)); 
+    gap: 12px;
+  }
+
+  .gallery-image {
+    display: block;
+    width: 100%;
+    height: 180px; ʼ
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  /* --- MOBILE --- */
+  @media (max-width: 700px) {
+    .project-hero {
+      padding: 100px 20px 48px;
+    }
+
+    .eyebrow {
+      margin-top: 32px;
+    }
+
+    .project-cover {
+      max-height: 240px;
+      border-radius: 0;
+    }
+
+    .project-cover-band {
+      padding: 0 20px;
+    }
+
+    .project-content,
+    .project-gallery {
+      padding: 48px 20px;
+    }
+
+    .gallery-grid {
+      grid-template-columns: repeat(2, 1fr); /* 2 колонки на мобільних пристроях */
+    }
+  }
+</style>

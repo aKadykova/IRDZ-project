@@ -16,19 +16,8 @@ const projectFields = [
   'initial_situation',
   'ways_to_get_involved',
   'team_members',
-  'public_contact',
-  'cover_photo',
-  'gallery'
+  'public_contact'
 ] as const;
-
-const imageFields = { fields: ['url', 'alternativeText', 'width', 'height'] };
-    const linkPopulate = {
-      populate: {
-        children: {
-          populate: { subchildren: true },
-        },
-      },
-    };
 
 const pickProjectFields = (project: Record<string, unknown>) =>
   Object.fromEntries(projectFields.map((field) => [field, project[field]]));
@@ -46,10 +35,8 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
       },
       public_contact: {
         fields: ['fullName', 'profileSlug', 'jobTitle', 'email'],
-        populate: { photo: imageFields },
+        populate: { photo: { fields: ['url', 'alternativeText', 'width', 'height'] } },
       },
-      cover_photo: imageFields,
-      gallery: imageFields
     };
 
     await next();
