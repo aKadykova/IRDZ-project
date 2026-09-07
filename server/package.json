@@ -33,15 +33,9 @@
     "typescript": "^5"
   },
   "engines": {
-<<<<<<< HEAD
-      "node": ">=18.0.0 <=22.x.x",
-      "npm": ">=6.0.0"
-    },
-=======
     "node": ">=18.0.0 <=22.x.x",
     "npm": ">=6.0.0"
   },
->>>>>>> fixed bug
   "strapi": {
     "uuid": "1b24de8d-f49a-4174-bcc5-2cdacc5b2e8a",
     "installId": "63869c9db2549cd8a63438c97866998d92834416c39e829fd8fcac5164b4996a"
