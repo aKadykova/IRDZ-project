@@ -77,7 +77,7 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
           fields: ['title', 'card_variant'],
           populate: {
             areas_cards: {
-              populate: { area: { fields: ['title', 'slug'] } },
+              populate: { area: { fields: ['title', 'slug', 'description'] } },
             },
             cards: { fields: ['heading', 'subheading', 'description'] },
             link: linkPopulate,
@@ -88,6 +88,7 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
             'title',
             'anchror_link',
             'target',
+            'card_variant',
             'show_tag_area_filter',
             'show_target_group_filter',
             'show_year_filter',

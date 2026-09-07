@@ -1,0 +1,260 @@
+---
+// src/pages/projekty/index.astro
+
+import type { TProject } from '../../types';
+import Layout from '../../layouts/Layout.astro';
+
+
+const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+
+const res = await fetch(`${baseApiUrl}/api/projects`);
+const json = await res.json();
+const projects: TProject[] = (json?.data ?? []).map((entry: any) => ({
+  id: entry.id,
+  ...(entry.attributes ?? entry), // supports both Strapi v4 (attributes) and v5 (flat) shapes
+}));
+
+// ---- Derive filter option lists from the data itself ----
+const allThemeAreas = Array.from(
+  new Map(
+    projects.flatMap((p) => p.theme_areas ?? []).map((a) => [a.slug, a]),
+  ).values(),
+);
+
+const allTargetGroups = Array.from(
+  new Map(
+    projects.flatMap((p) => p.target_groups ?? []).map((g) => [g.slug, g]),
+  ).values(),
+);
+
+const allYears = Array.from(
+  new Set(
+    projects
+      .map((p) => (p.start_date ? new Date(p.start_date).getFullYear() : null))
+      .filter((y): y is number => y !== null),
+  ),
+).sort((a, b) => b - a);
+
+console.log(allYears);
+
+const allStatuses = Array.from(
+  new Set(projects.map((p) => p.project_status).filter(Boolean)),
+);
+
+const cardVariants = ['dark'] as const;
+---
+
+<Layout>
+
+<section class="listing-section projects-section">
+  <div class="section-inner">
+    <h2>Všechny projekty</h2>
+
+    <div class="filters">
+      <select class="filter-select" data-filter="theme_area">
+          <option value="">Všechny oblasti</option>
+          {allThemeAreas.map((area) => (
+            <option value={area.slug}>{area.title}</option>
+          ))}
+        </select>
+
+      <select class="filter-select" data-filter="target_group">
+          <option value="">Všechny cílové skupiny</option>
+          {allTargetGroups.map((group) => (
+            <option value={group.slug}>{group.title}</option>
+          ))}
+        </select>
+      
+
+      
+      <select class="filter-select" data-filter="year">
+          <option value="">Všechny roky</option>
+          {allYears.map((year) => (
+            <option value={year}>{year}</option>
+          ))}
+        </select>
+
+      <select class="filter-select" data-filter="status">
+          <option value="">Všechny stavy</option>
+          {allStatuses.map((status) => (
+            <option value={status}>{status}</option>
+          ))}
+        </select>
+    
+    </div>
+
+    <div class="content-grid" id="projects-grid">
+      {projects.map((item, index) => (
+        <article
+          class:list={['content-card', `content-card--${cardVariants[index % cardVariants.length]}`, { 'content-card-no-image': !item.cover_photo }]}
+          data-theme-areas={item.theme_areas?.map((a) => a.slug).join(',') ?? ''}
+          data-target-groups={item.target_groups?.map((g) => g.slug).join(',') ?? ''}
+          data-year={item.start_date ? new Date(item.start_date).getFullYear() : ''}
+          data-status={item.project_status ?? ''}
+        >
+          <div class="card-body">
+            {(item.theme_areas?.length > 0 || (item.start_date && item.end_date)) && (
+              <div class="tags">
+                {item.theme_areas?.map((tag) => (
+                  <span class="tag">{tag.title}</span>
+                ))}
+                {item.start_date && item.end_date && (
+                  <span class="tag">
+                    {new Date(item.start_date).getFullYear()}–{new Date(item.end_date).getFullYear()}
+                  </span>
+                )}
+              </div>
+            )}
+            <h3>{item.title}</h3>
+            <p>{item.short_summary}</p>
+            <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <p class="empty-state" id="empty-state" hidden>Žádné projekty neodpovídají zvoleným filtrům.</p>
+  </div>
+</section>
+
+</Layout>
+
+<script>
+  // Pure client-side filtering: all projects are already rendered in the DOM,
+  // this just toggles visibility based on the four <select> filters.
+  const grid = document.getElementById('projects-grid');
+  const emptyState = document.getElementById('empty-state');
+  const selects = document.querySelectorAll<HTMLSelectElement>('.filter-select');
+
+  function applyFilters() {
+    if (!grid) return;
+    const values: Record<string, string> = {};
+    selects.forEach((select) => {
+      const key = select.dataset.filter;
+      if (key) values[key] = select.value;
+    });
+
+    let visibleCount = 0;
+
+    grid.querySelectorAll<HTMLElement>('.content-card').forEach((card) => {
+      const themeAreas = (card.dataset.themeAreas ?? '').split(',');
+      const targetGroups = (card.dataset.targetGroups ?? '').split(',');
+      const year = card.dataset.year ?? '';
+      const status = card.dataset.status ?? '';
+
+      const matches =
+        (!values.theme_area || themeAreas.includes(values.theme_area)) &&
+        (!values.target_group || targetGroups.includes(values.target_group)) &&
+        (!values.year || year === values.year) &&
+        (!values.status || status === values.status);
+
+      card.hidden = !matches;
+      if (matches) visibleCount += 1;
+    });
+
+    if (emptyState) emptyState.hidden = visibleCount > 0;
+  }
+
+  selects.forEach((select) => select.addEventListener('change', applyFilters));
+</script>
+
+<style>
+  .listing-section {
+    padding: 112px 40px;
+    background: #f4f1eb;
+    color: #1e1e22;
+  }
+
+  .projects-section {
+    background: #1e1e22;
+    color: #f4f1eb;
+  }
+
+  .section-inner {
+    width: min(100%, 1160px);
+    margin: 0 auto;
+  }
+
+  h2 {
+    margin: 0 0 40px;
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+
+  .filter-select {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font-size: 15px;
+    font-family: inherit;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .content-card {
+    display: block;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .content-card-no-image .card-body {
+    min-height: 220px;
+  }
+
+  .content-card--dark {
+    background: var(--color-primary);
+    color: #f4f1eb;
+  }
+
+  .content-card--dark .card-body a {
+    color: #f4f1eb;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.72;
+  }
+
+  .card-body { padding: 32px; }
+  h3 { margin: 0 0 16px; font-size: 24px; line-height: 1.2; font-weight: 500; }
+  .card-body p { margin: 0 0 24px; line-height: 1.5; opacity: 0.72; font-size: 16px; }
+  .card-body a { font-weight: 700; text-decoration: none; }
+
+  .empty-state {
+    text-align: center;
+    opacity: 0.7;
+    margin-top: 48px;
+  }
+
+  @media (max-width: 700px) {
+    .listing-section { padding: 72px 24px; }
+    .content-grid { grid-template-columns: 1fr; }
+  }
+</style>

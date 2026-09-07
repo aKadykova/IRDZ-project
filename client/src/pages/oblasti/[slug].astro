@@ -1,0 +1,270 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import type { TProject } from '../../types';
+
+type Area = {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+};
+
+type AreaResponse = {
+  data: Area[];
+};
+
+type ProjectsResponse = {
+  data: TProject[];
+};
+
+export async function getStaticPaths() {
+  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const response = await fetch(new URL('/api/tag-areas?fields[0]=title&fields[1]=slug&fields[2]=description', baseApiUrl));
+
+  if (!response.ok) {
+    throw new Error(`Areas request failed: ${response.status}`);
+  }
+
+  const result = (await response.json()) as AreaResponse;
+
+  return result.data.map((area) => ({
+    params: { slug: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
+
+const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+
+const projectsQuery = new URLSearchParams({
+  'filters[theme_areas][slug][$eq]': area.slug,
+  'populate[cover_photo]': 'true',
+});
+
+const projectsRes = await fetch(`${baseApiUrl}/api/projects?${projectsQuery.toString()}`);
+const projectsJson = (await projectsRes.json()) as ProjectsResponse;
+
+const projects: TProject[] = (projectsJson?.data ?? []).map((entry: any) => ({
+  id: entry.id,
+  ...(entry.attributes ?? entry),
+}));
+
+const cardVariants = ['light', 'dark', 'green'] as const;
+---
+
+<Layout>
+  <main class="area-page">
+    <div class="area-page-inner">
+      <a class="back-link" href="/">← Zpět na úvod</a>
+      <p class="eyebrow">Oblast</p>
+      <h1>{area.title}</h1>
+      {area.description && <p class="description">{area.description}</p>}
+
+      {projects.length > 0 && (
+        <section class="area-projects">
+          <h2>Projekty v této oblasti</h2>
+          <div class:list={['content-grid', `content-grid-${projects.length}`]}>
+            {projects.map((item, index) => (
+              <article
+                class:list={[
+                  'content-card',
+                  `content-card--${cardVariants[index % cardVariants.length]}`,
+                  { 'content-card-no-image': !item.cover_photo },
+                ]}
+              >
+                {item.cover_photo && (
+                  <img
+                    class="card-image"
+                    src={item.cover_photo.url}
+                    alt={item.cover_photo.alternativeText ?? item.title}
+                    width={item.cover_photo.width}
+                    height={item.cover_photo.height}
+                  />
+                )}
+                <div class="card-body">
+                  <h3>{item.title}</h3>
+                  <p>{item.short_summary}</p>
+                  <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .area-page {
+    min-height: 100vh;
+    padding: 170px 40px 120px;
+    box-sizing: border-box;
+    background:#f4f1eb
+    color: var(--color-text-light);
+  }
+
+  .area-page-inner {
+    width: min(100%, 1160px);
+    margin: 0 auto;
+  }
+
+  .back-link {
+    color: #2d5a27;
+    font-size: 20px;
+    text-decoration: none;
+  }
+
+  .eyebrow {
+    margin: 80px 0 20px;
+    color: #2d5a27;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1.05;
+  }
+
+  .description {
+    max-width: 700px;
+    margin: 36px 0 0;
+    font-size: 20px;
+    line-height: 1.55;
+  }
+
+  .area-projects {
+    margin-top: 96px;
+  }
+
+  .area-projects h2 {
+    margin: 0 0 40px;
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1.1;
+  }
+
+  /* ---- grid + featured-first-card pattern, same as HeadingSectionBlock ---- */
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .content-grid-1,
+  .content-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 .content-card:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(220px, 38%) minmax(0, 1fr);
+  }
+
+  .content-grid-3 .content-card:first-child .card-image {
+    height: 100%;
+  }
+
+  .content-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 32%) minmax(0, 1fr);
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .content-card-no-image {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid-3 .content-card-no-image:first-child {
+    grid-template-columns: 1fr;
+  }
+
+  .content-card-no-image .card-body {
+    min-height: 220px;
+  }
+
+  .content-card--light {
+    background: #f4f1eb;
+    color: var(--color-soft-black);
+  }
+
+  .content-card--light .card-body a {
+    color: var(--color-soft-black);
+  }
+
+  .content-card--dark {
+    background: #2a2a30;
+    color: #f4f1eb;
+  }
+
+  .content-card--dark .card-body a {
+    color: var(--color-text-light);
+  }
+
+  .content-card--green {
+    background: var(--color-primary);
+    color: #eef4f0;
+  }
+
+  .content-card--green .card-body a {
+    color: var(--color-text-light);
+  }
+
+  .card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-body { padding: 32px; }
+
+  .card-body h3 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  .card-body p {
+    margin: 0 0 20px;
+    line-height: 1.5;
+    opacity: 0.72;
+    font-size: 16px;
+  }
+
+  .card-body a {
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  @media (max-width: 700px) {
+    .area-page {
+      padding: 132px 24px 80px;
+    }
+
+    .eyebrow {
+      margin-top: 56px;
+    }
+
+    .content-grid { grid-template-columns: 1fr; }
+    .content-card,
+    .content-grid-3 .content-card:first-child {
+      grid-template-columns: 1fr;
+    }
+    .card-image,
+    .content-grid-3 .content-card:first-child .card-image {
+      height: 220px;
+    }
+  }
+</style>

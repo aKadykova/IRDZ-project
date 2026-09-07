@@ -24,6 +24,8 @@ export interface BlocksHeadingSection extends Struct.ComponentSchema {
   attributes: {
     anchror_link: Schema.Attribute.String & Schema.Attribute.Required;
     articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
+    card_variant: Schema.Attribute.Enumeration<['white', 'dark', 'green']> &
+      Schema.Attribute.DefaultTo<'dark'>;
     innovation_platforms: Schema.Attribute.Relation<
       'oneToMany',
       'api::innovation-platform.innovation-platform'

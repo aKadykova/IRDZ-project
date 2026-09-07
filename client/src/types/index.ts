@@ -1,5 +1,3 @@
-// --- Дрібні допоміжні типи ---
-
 export type TStrapiImage = {
   id: number;
   documentId: string;
@@ -45,8 +43,6 @@ export type TFooterColumn = {
   links: TNavItem[];
 };
 
-// --- Основні блоки Layout (Header & Footer) ---
-
 export type THeaderData = {
   id: number;
   logo: TStrapiLogo;
@@ -65,7 +61,150 @@ export type TFooterData = {
   column: TFooterColumn[];
 };
 
-// --- Головна сутність Global ---
+export type TPageLink = Pick<TNavItem, 'id' | 'href' | 'label' | 'isExternal' | 'isButtonLink' | 'type'>;
+
+export type THeroBlock = {
+  id: number;
+  heading01: string;
+  heading02: string;
+  text: string;
+  primary_image: TStrapiImage | null;
+  secondary_image: TStrapiImage | null;
+  links: TPageLink[];
+  __component: 'blocks.hero';
+};
+
+export type TThinkingBlock = {
+  id: number;
+  title: string;
+  description: string | null;
+  fullDescription: string | null;
+  link: TPageLink[];
+  __component: 'blocks.jak-premyslime-section';
+};
+
+export type TProcessCard = {
+  id: number;
+  heading: string;
+  subheading: string;
+  description: string;
+};
+
+export type TAreaCard = {
+  id: number;
+  size: 'tall' | 'standard' | 'wide' | string;
+  style: 'image-bg' | 'dark-green' | 'white' | 'light-green' | string;
+  area: {
+    id: number;
+    documentId: string;
+    title: string;
+    slug: string;
+    description?: string | null;
+  };
+};
+
+export type TProjectTag = {
+  id: number;
+  title: string;
+  slug: string;
+};
+
+export type TTeamMember = {
+  id: number;
+  documentId?: string;
+  fullName: string;
+  profileSlug?: string;
+  jobTitle: string;
+  email?: string | null;
+  photo?: TStrapiImage | null;
+};
+
+export type TProject = {
+  id: number;
+  documentId: string;
+  title: string;
+  slug: string;
+  short_summary: string;
+  start_date: string;
+  end_date: string;
+  project_status: string | null;
+  show_on_homepage: boolean;
+  homepage_order: number;
+  cover_photo: TStrapiImage | null;
+  gallery: TStrapiImage[];
+  theme_areas: TProjectTag[];
+  target_groups: TProjectTag[];
+  objective: string | null;
+  phases: string | null;
+  results: string | null;
+  description: string | null;
+  initial_situation: string | null;
+  ways_to_get_involved: string | null;
+  team_members: TTeamMember[];
+  public_contact: TTeamMember | null;
+};
+
+export type TInnovationPlatform = {
+  id: number;
+  documentId: string;
+  title: string;
+  slug: string;
+  purpose: string;
+  curren_status: string | null;
+  show_on_homepage: boolean;
+  homepage_order: number;
+  cover_photo: TStrapiImage | null;
+  tag_areas: unknown[];
+  target_groups: unknown[];
+};
+
+export type TCardGridBlock = {
+  id: number;
+  title: string;
+  card_variant: string;
+  cards: TProcessCard[];
+  areas_cards: TAreaCard[];
+  link: TPageLink | null;
+  __component: 'blocks.card-grid';
+};
+
+export type THeadingSectionBlock = {
+  id: number;
+  title: string;
+  anchror_link: string;
+  target: 'projects' | 'platforms' | string;
+  card_variant: 'white' | 'dark' | 'green',
+  start_date: string,
+  end_date: string,
+  show_tag_area_filter: boolean;
+  show_target_group_filter: boolean;
+  show_year_filter: boolean;
+  show_status_filter: boolean;
+  show_current_activities_filter: boolean;
+  articles: unknown[];
+  team_members: unknown[];
+  projects: TProject[];
+  innovation_platforms: TInnovationPlatform[];
+  link: TPageLink | null;
+  __component: 'blocks.heading-section';
+};
+
+export type TLandingBlock =
+  | THeroBlock
+  | TThinkingBlock
+  | TCardGridBlock
+  | THeadingSectionBlock;
+
+export type TLandingPage = {
+  id: number;
+  documentId: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  blocks: TLandingBlock[];
+};
 
 export type TGlobalAttributes = {
   id: number;
@@ -79,3 +218,7 @@ export type TGlobalAttributes = {
   footer: TFooterData;
 };
 
+export type TPageResponse = {
+  data: TLandingPage;
+  meta: Record<string, unknown>;
+};

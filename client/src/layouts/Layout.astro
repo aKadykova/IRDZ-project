@@ -60,12 +60,15 @@ const { header, footer } = globalData.data;
 			</div>
 		)}
 
+		<main>
+			<slot />
+		</main>
+
 		{footer && (
 			<div class="box">
 				<Footer data={footer} />
 			</div>
 		)}
-		<slot />
 	</body>
 </html>
 

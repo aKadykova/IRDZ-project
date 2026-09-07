@@ -1,0 +1,36 @@
+---
+import type { TPageLink } from '../types';
+
+interface Props {
+  data: TPageLink;
+  variant?: 'light' | 'dark';
+}
+
+const { data, variant = 'light' } = Astro.props;
+---
+
+<a class:list={['section-link', `section-link--${variant}`]} href={data.href}>{data.label}</a>
+
+<style>
+  .section-link {
+    font-family: 'Manrope', sans-serif;
+    display: inline-block;
+    margin-top: 50px;
+    font-size: 30px;
+    font-weight: 350;
+    text-decoration-thickness: 1px;
+    transition: opacity 0.2s ease;
+  }
+
+  .section-link--light {
+    color: var(--color-primary);
+  }
+
+  .section-link--dark {
+    color: var(--color-section-link);
+  }
+
+  .section-link:hover {
+    opacity: 0.72;
+  }
+</style>
