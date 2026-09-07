@@ -8,19 +8,87 @@ interface Props {
 }
 
 const { data } = Astro.props;
-const isPlatforms = data.target === 'platforms';
-const items = isPlatforms ? data.innovation_platforms : data.projects;
+const items = data.target === 'projects' ? data.projects.slice(0, 5) : [];
+
+const cardVariants = ['light', 'dark', 'green'] as const;
+
+const allThemeAreas = Array.from(
+  new Map(items.flatMap((p) => p.theme_areas ?? []).map((a) => [a.slug, a])).values(),
+);
+
+const allTargetGroups = Array.from(
+  new Map(items.flatMap((p) => p.target_groups ?? []).map((g) => [g.slug, g])).values(),
+);
+
+const allYears = Array.from(
+  new Set(
+    items
+      .map((p) => (p.start_date ? new Date(p.start_date).getFullYear() : null))
+      .filter((y): y is number => y !== null),
+  ),
+).sort((a, b) => b - a);
+
+const allStatuses = Array.from(new Set(items.map((p) => p.project_status).filter(Boolean)));
+
+// ---- Умова показу кожного фільтра: булевий прапорець + наявність опцій ----
+const showTagAreaFilter = data.show_tag_area_filter && allThemeAreas.length > 0;
+const showTargetGroupFilter = data.show_target_group_filter && allTargetGroups.length > 0;
+const showYearFilter = data.show_year_filter && allYears.length > 0;
+const showStatusFilter = data.show_status_filter && allStatuses.length > 0;
+const hasAnyFilter = showTagAreaFilter || showTargetGroupFilter || showYearFilter || showStatusFilter;
 ---
 
 <section
   id={data.anchror_link?.replace('#', '')}
-  class:list={['listing-section', { 'projects-section': !isPlatforms, 'platforms-section': isPlatforms }]}
+  class="listing-section projects-section"
 >
   <div class="section-inner">
+
+    {hasAnyFilter && (
+      <div class="filters">
+        {showTagAreaFilter && (
+          <select class="filter-select" data-filter="theme_area">
+            <option value="">Všechny oblasti</option>
+            {allThemeAreas.map((area) => (
+              <option value={area.slug}>{area.title}</option>
+            ))}
+          </select>
+        )}
+
+        {showTargetGroupFilter && (
+          <select class="filter-select" data-filter="target_group">
+            <option value="">Všechny cílové skupiny</option>
+            {allTargetGroups.map((group) => (
+              <option value={group.slug}>{group.title}</option>
+            ))}
+          </select>
+        )}
+
+        {showYearFilter && (
+          <select class="filter-select" data-filter="year">
+            <option value="">Všechny roky</option>
+            {allYears.map((year) => (
+              <option value={year}>{year}</option>
+            ))}
+          </select>
+        )}
+
+        {showStatusFilter && (
+          <select class="filter-select" data-filter="status">
+            <option value="">Všechny stavy</option>
+            {allStatuses.map((status) => (
+              <option value={status}>{status}</option>
+            ))}
+          </select>
+        )}
+      </div>
+    )}
+
     <h2>{data.title}</h2>
-    <div class="content-grid">
-      {items.map((item) => (
-        <article class="content-card">
+    <div class:list={['content-grid', `content-grid-${items.length}`]}>
+      {items.map((item, index) => (
+        <article
+          class:list={['content-card', `content-card--${cardVariants[index % cardVariants.length]}`, { 'content-card-no-image': !item.cover_photo }]}>
           {item.cover_photo && (
             <StrapiImage
               class="card-image"
@@ -32,15 +100,26 @@ const items = isPlatforms ? data.innovation_platforms : data.projects;
             />
           )}
           <div class="card-body">
-            <h3>{item.title}</h3>
-            <p>{'purpose' in item ? item.purpose : item.short_summary}</p>
-            <a href={isPlatforms ? `/platformy/${item.slug}` : `/projekty/${item.slug}`}>Zjistit více →</a>
-          </div>
+            {(item.theme_areas.length > 0 || (item.start_date && item.end_date)) && (
+                <div class="tags">
+                {item.theme_areas.map((tag) => (
+                    <span class="tag">{tag.title}</span>
+                ))}
+                {item.start_date && item.end_date && (
+                    <span class="tag">
+                    {new Date(item.start_date).getFullYear()}–{new Date(item.end_date).getFullYear()}
+                    </span>
+                )}
+            </div>
+  )}
+  <h3>{item.title}</h3>
+  <p>{item.short_summary}</p>
+  <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
+</div>
         </article>
       ))}
     </div>
-    {data.link && <SectionLink data={data.link} />}
-  </div>
+        {data.link && <SectionLink data={data.link} variant="dark" />}  </div>
 </section>
 
 <style>
@@ -57,6 +136,23 @@ const items = isPlatforms ? data.innovation_platforms : data.projects;
     color: #f4f1eb;
   }
 
+    .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+    }
+
+    .tag {
+    display: inline-block;
+    padding: 8px 18px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 17px;
+    font-weight: 400;
+    opacity: 0.72;
+    }
+
   .section-inner {
     width: min(100%, 1160px);
     margin: 0 auto;
@@ -66,6 +162,7 @@ const items = isPlatforms ? data.innovation_platforms : data.projects;
     margin: 0 0 40px;
     font-size: clamp(2rem, 4vw, 4rem);
     line-height: 1.1;
+    text-align: center;
   }
 
   .content-grid {
@@ -74,33 +171,94 @@ const items = isPlatforms ? data.innovation_platforms : data.projects;
     gap: 24px;
   }
 
+  .content-grid-1,
+  .content-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid-3 .content-card:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .content-grid-3 .content-card:first-child {
+    grid-template-columns: minmax(220px, 38%) minmax(0, 1fr);
+  }
+
+  .content-grid-3 .content-card:first-child :global(.card-image) {
+    height: 100%;
+  }
+
   .content-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 32%) minmax(0, 1fr);
     overflow: hidden;
-    background: #ffffff;
     border-radius: 12px;
   }
 
-  .projects-section .content-card {
-    background: #2a2a30;
+  .content-card-no-image {
+    grid-template-columns: 1fr;
   }
 
-  .card-image {
+  .content-grid-3 .content-card-no-image:first-child {
+    grid-template-columns: 1fr;
+  }
+
+  .content-card-no-image .card-body {
+    min-height: 220px;
+  }
+
+  .content-card--light {
+    background: #f4f1eb;
+    color: var(--color-soft-black);
+  }
+
+
+  .content-card--light .card-body a {
+    color: var(--color-soft-black);
+  }
+
+  .content-card--dark {
+    background: #2a2a30;
+    color: #f4f1eb;
+  }
+
+  .content-card--dark .card-body a {
+    color: var(--color-text-light);
+  }
+
+  .content-card--green {
+    background: var(--color-primary);
+    color: #eef4f0;
+  }
+
+  .content-card--green .card-body a {
+    color: var(--color-text-light);
+  }
+
+  :global(.card-image) {
     display: block;
     width: 100%;
-    aspect-ratio: 1.35;
+    height: 100%;
+    object-fit: cover;
   }
 
-  .card-body { padding: 24px; }
-  h3 { margin: 0; font-size: 22px; line-height: 1.2; }
-  .card-body p { margin: 16px 0 24px; line-height: 1.5; opacity: 0.72; }
-  .card-body a { color: #6e42d9; font-weight: 700; text-decoration: none; }
-
-  .projects-section .card-body a {
-    color: #8f63ff;
-  }
+  .card-body { padding: 45px; }
+  h3 { margin: 0 0 32px; font-size: 30px; line-height: 1.2; font-weight: 500}
+  .card-body p { margin: 0 0 24px; line-height: 1.5; opacity: 0.72; font-size: 17px; }
+  .card-body a { font-weight: 700; text-decoration: none;}
 
   @media (max-width: 700px) {
     .listing-section { padding: 72px 24px; }
     .content-grid { grid-template-columns: 1fr; }
+    .content-card,
+    .content-grid-3 .content-card:first-child { grid-template-columns: 1fr; }
+    :global(.card-image),
+    .content-grid-3 .content-card:first-child :global(.card-image) {
+      height: 220px;
+    }
   }
 </style>

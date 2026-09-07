@@ -176,6 +176,15 @@
         "latest",
         "manual"
       ]
+    },
+    "card_variant": {
+      "type": "enumeration",
+      "default": "dark",
+      "enum": [
+        "white",
+        "dark",
+        "green"
+      ]
     }
   },
   "config": {}

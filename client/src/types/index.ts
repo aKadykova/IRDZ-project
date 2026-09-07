@@ -103,6 +103,12 @@ export type TAreaCard = {
   };
 };
 
+export type TProjectTag = {
+  id: number;
+  title: string;
+  slug: string;
+};
+
 export type TProject = {
   id: number;
   documentId: string;
@@ -115,8 +121,8 @@ export type TProject = {
   show_on_homepage: boolean;
   homepage_order: number;
   cover_photo: TStrapiImage | null;
-  theme_areas: unknown[];
-  target_groups: unknown[];
+  theme_areas: TProjectTag[];
+  target_groups: TProjectTag[];
 };
 
 export type TInnovationPlatform = {
@@ -148,6 +154,9 @@ export type THeadingSectionBlock = {
   title: string;
   anchror_link: string;
   target: 'projects' | 'platforms' | string;
+  card_variant: 'white' | 'dark' | 'green',
+  start_date: string,
+  end_date: string,
   show_tag_area_filter: boolean;
   show_target_group_filter: boolean;
   show_year_filter: boolean;

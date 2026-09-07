@@ -22,7 +22,7 @@ const { blocks } = Astro.props;
   }
 
   if (block.__component === 'blocks.heading-section') {
-    return <ListingSection data={block} />;
+    return block.target === 'projects' ? <ListingSection data={block} /> : null;
   }
 
 //  if (block.__component === 'blocks.jak-premyslime-section') {
