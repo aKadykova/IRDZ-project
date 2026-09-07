@@ -12,7 +12,7 @@ type ProjectDetailResponse = {
 };
 
 export async function getStaticPaths() {
-  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
   const response = await fetch(new URL('/api/projects?fields[0]=slug', baseApiUrl));
 
   if (!response.ok) {
@@ -29,7 +29,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 
-const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 
 const projectQuery = new URLSearchParams({
   'filters[slug][$eq]': slug ?? '',
@@ -64,7 +64,7 @@ const endYear = project.end_date ? new Date(project.end_date).getFullYear() : nu
 <Layout>
   <main class="project-hero">
     <div class="project-hero-inner">
-      <a class="back-link" href="/projekty">← Zpět na projekty</a>
+      <a class="back-link" id="back-link" href="/projekty">← Zpět na projekty</a>
       <p class="eyebrow">Projekt</p>
       <h1>{project.title}</h1>
 
@@ -156,6 +156,24 @@ const endYear = project.end_date ? new Date(project.end_date).getFullYear() : nu
     </section>
   )}
 </Layout>
+
+<script>
+  // Point the back-link to wherever the user actually came from (landing vs. projects list)
+  const backLink = document.getElementById('back-link') as HTMLAnchorElement | null;
+  if (backLink) {
+    const referrer = document.referrer;
+    const sameOrigin = referrer && new URL(referrer).origin === window.location.origin;
+    const referrerPath = sameOrigin ? new URL(referrer).pathname : null;
+
+    if (referrerPath === '/' ) {
+      backLink.href = '/';
+      backLink.textContent = '← Zpět na hlavní stránku';
+    } else {
+      backLink.href = '/projekty';
+      backLink.textContent = '← Zpět na projekty';
+    }
+  }
+</script>
 
 <style>
   .project-hero {

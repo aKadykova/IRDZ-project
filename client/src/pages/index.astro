@@ -3,7 +3,7 @@ import LandingBlocks from '../components/LandingBlocks.astro';
 import Layout from '../layouts/Layout.astro';
 import type { TPageResponse } from '../types';
 
-const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 const response = await fetch(new URL('/api/landing-page', baseApiUrl));
 
 if (!response.ok) {

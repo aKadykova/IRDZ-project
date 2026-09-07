@@ -18,7 +18,7 @@ type ProjectsResponse = {
 };
 
 export async function getStaticPaths() {
-  const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+  const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
   const response = await fetch(new URL('/api/tag-areas?fields[0]=title&fields[1]=slug&fields[2]=description', baseApiUrl));
 
   if (!response.ok) {
@@ -35,7 +35,7 @@ export async function getStaticPaths() {
 
 const { area } = Astro.props;
 
-const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 
 const projectsQuery = new URLSearchParams({
   'filters[theme_areas][slug][$eq]': area.slug,

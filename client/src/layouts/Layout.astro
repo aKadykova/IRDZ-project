@@ -22,7 +22,7 @@ type TStrapiResponse<T> = {
 	};
 };
 
-const baseApiUrl = import.meta.env.VITE_STRAPI_BASE_URL ?? 'http://localhost:1337';
+const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 
 async function getStrapiGlobalData(): Promise<TStrapiResponse<TGlobalAttributes>> {
 	const url = new URL('/api/global', baseApiUrl);
