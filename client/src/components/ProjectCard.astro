@@ -1,0 +1,204 @@
+---
+import type { TProject } from '../types';
+import StrapiImage from './StrapiImage.astro';
+
+interface Props {
+  project: TProject;
+  variant?: 'light' | 'dark' | 'green';
+  featured?: boolean;
+  titleSize?: string;
+  summarySize?: string;
+  tagSize?: string;
+  tagPadding?: string;
+  tagRadius?: string;
+  tagGap?: string;
+  dataThemeAreas?: string;
+  dataTargetGroups?: string;
+  dataYear?: number | string;
+  dataStatus?: string;
+}
+
+const {
+  project,
+  variant = 'dark',
+  featured = false,
+  titleSize = '30px',
+  summarySize = '17px',
+  tagSize = '17px',
+  tagPadding = '8px 18px',
+  tagRadius = '999px',
+  tagGap = '8px',
+  dataThemeAreas,
+  dataTargetGroups,
+  dataYear,
+  dataStatus,
+} = Astro.props;
+const hasTags =
+  project.theme_areas?.length > 0 ||
+  project.target_groups?.length > 0 ||
+  Boolean(project.start_date) ||
+  Boolean(project.project_status);
+const startYear = project.start_date ? new Date(project.start_date).getFullYear() : null;
+const endYear = project.end_date ? new Date(project.end_date).getFullYear() : null;
+const showImage = variant === 'light' && Boolean(project.cover_photo);
+---
+
+<article
+  class:list={['content-card', `content-card--${variant}`, { 'content-card-no-image': !showImage, 'content-card--featured': featured }]}
+  style={`--project-card-title-size: ${titleSize}; --project-card-summary-size: ${summarySize}; --project-card-tag-size: ${tagSize}; --project-card-tag-padding: ${tagPadding}; --project-card-tag-radius: ${tagRadius}; --project-card-tag-gap: ${tagGap};`}
+  data-theme-areas={dataThemeAreas}
+  data-target-groups={dataTargetGroups}
+  data-year={dataYear}
+  data-status={dataStatus}
+>
+  {showImage && project.cover_photo && (
+    <StrapiImage
+      class="card-image"
+      src={project.cover_photo.url}
+      alt={project.cover_photo.alternativeText ?? project.title}
+      width={project.cover_photo.width}
+      height={project.cover_photo.height}
+      responsive={true}
+    />
+  )}
+
+  <div class="card-body">
+    {hasTags && (
+      <div class="tags">
+        {project.theme_areas?.map((tag) => (
+          <span class="tag filter-tag is-visible" data-filter-tag="theme_area">{tag.title}</span>
+        ))}
+        {project.target_groups?.map((tag) => (
+          <span class="tag filter-tag" data-filter-tag="target_group">{tag.title}</span>
+        ))}
+        {startYear && (
+          <span class="tag filter-tag" data-filter-tag="year">
+            {startYear}{endYear ? `–${endYear}` : ''}
+          </span>
+        )}
+        {project.project_status && (
+          <span class="tag filter-tag" data-filter-tag="status">{project.project_status}</span>
+        )}
+      </div>
+    )}
+    <h3>{project.title}</h3>
+    <p>{project.short_summary}</p>
+    <a href={`/projekty/${project.slug}`}>Detail Projektu →</a>
+  </div>
+</article>
+
+<style>
+  .content-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 32%) minmax(0, 1fr);
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .content-card--featured {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(220px, 38%) minmax(0, 1fr);
+  }
+
+  .content-card-no-image,
+  .content-card--featured.content-card-no-image {
+    grid-template-columns: 1fr;
+  }
+
+  .content-card-no-image .card-body {
+    min-height: 220px;
+  }
+
+  .content-card--light {
+    background: #f4f1eb;
+    color: var(--color-soft-black);
+  }
+
+  .content-card--light .card-body a {
+    color: var(--color-soft-black);
+  }
+
+  .content-card--dark {
+    background: #2a2a30;
+    color: #f4f1eb;
+  }
+
+  .content-card--dark .card-body a {
+    color: var(--color-text-light);
+  }
+
+  .content-card--green {
+    background: var(--color-primary);
+    color: #eef4f0;
+  }
+
+  .content-card--green .card-body a {
+    color: var(--color-text-light);
+  }
+
+  :global(.card-image) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--project-card-tag-gap);
+    margin: 0 0 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: var(--project-card-tag-padding);
+    border: 1px solid currentColor;
+    border-radius: var(--project-card-tag-radius);
+    font-size: var(--project-card-tag-size);
+    font-weight: 400;
+    opacity: 0.72;
+  }
+
+  .filter-tag {
+    display: none;
+  }
+
+  .filter-tag.is-visible {
+    display: inline-block;
+  }
+
+  .card-body {
+    padding: 45px;
+  }
+
+  h3 {
+    margin: 0 0 32px;
+    font-size: var(--project-card-title-size);
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  .card-body p {
+    margin: 0 0 24px;
+    line-height: 1.5;
+    opacity: 0.72;
+    font-size: var(--project-card-summary-size);
+  }
+
+  .card-body a {
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  @media (max-width: 700px) {
+    .content-card,
+    .content-card--featured {
+      grid-template-columns: 1fr;
+    }
+
+    :global(.card-image) {
+      height: 220px;
+    }
+  }
+</style>

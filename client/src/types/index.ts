@@ -173,6 +173,7 @@ export type THeadingSectionBlock = {
   title: string;
   anchror_link: string;
   target: 'projects' | 'platforms' | string;
+  selection_mode_projects: 'all' | 'latest' | 'manual' | string;
   card_variant: 'white' | 'dark' | 'green',
   start_date: string,
   end_date: string,

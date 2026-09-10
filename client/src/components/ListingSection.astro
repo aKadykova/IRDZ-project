@@ -1,6 +1,6 @@
 ---
 import type { THeadingSectionBlock } from '../types';
-import StrapiImage from './StrapiImage.astro';
+import ProjectCard from './ProjectCard.astro';
 import SectionLink from './SectionLink.astro';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { data } = Astro.props;
-const items = data.target === 'projects' ? data.projects.slice(0, 5) : [];
+const items = data.target === 'projects' ? data.projects : [];
 
 const cardVariants = ['light', 'dark', 'green'] as const;
 
@@ -87,36 +87,11 @@ const hasAnyFilter = showTagAreaFilter || showTargetGroupFilter || showYearFilte
     <h2>{data.title}</h2>
     <div class:list={['content-grid', `content-grid-${items.length}`]}>
       {items.map((item, index) => (
-        <article
-          class:list={['content-card', `content-card--${cardVariants[index % cardVariants.length]}`, { 'content-card-no-image': !item.cover_photo }]}>
-          {item.cover_photo && (
-            <StrapiImage
-              class="card-image"
-              src={item.cover_photo.url}
-              alt={item.cover_photo.alternativeText ?? item.title}
-              width={item.cover_photo.width}
-              height={item.cover_photo.height}
-              responsive={true}
-            />
-          )}
-          <div class="card-body">
-            {(item.theme_areas.length > 0 || (item.start_date && item.end_date)) && (
-                <div class="tags">
-                {item.theme_areas.map((tag) => (
-                    <span class="tag">{tag.title}</span>
-                ))}
-                {item.start_date && item.end_date && (
-                    <span class="tag">
-                    {new Date(item.start_date).getFullYear()}–{new Date(item.end_date).getFullYear()}
-                    </span>
-                )}
-            </div>
-  )}
-  <h3>{item.title}</h3>
-  <p>{item.short_summary}</p>
-  <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
-</div>
-        </article>
+        <ProjectCard
+          project={item}
+          variant={cardVariants[index % cardVariants.length]}
+          featured={index === 0}
+        />
       ))}
     </div>
         {data.link && <SectionLink data={data.link} variant="dark" />}  </div>

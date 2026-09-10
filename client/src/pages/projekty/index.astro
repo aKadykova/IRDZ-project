@@ -3,6 +3,7 @@
 
 import type { TProject } from '../../types';
 import Layout from '../../layouts/Layout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
 
 
 const baseApiUrl = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
@@ -41,7 +42,6 @@ const allStatuses = Array.from(
   new Set(projects.map((p) => p.project_status).filter(Boolean)),
 );
 
-const cardVariants = ['dark'] as const;
 ---
 
 <Layout>
@@ -85,31 +85,20 @@ const cardVariants = ['dark'] as const;
 
     <div class="content-grid" id="projects-grid">
       {projects.map((item, index) => (
-        <article
-          class:list={['content-card', `content-card--${cardVariants[index % cardVariants.length]}`, { 'content-card-no-image': !item.cover_photo }]}
-          data-theme-areas={item.theme_areas?.map((a) => a.slug).join(',') ?? ''}
-          data-target-groups={item.target_groups?.map((g) => g.slug).join(',') ?? ''}
-          data-year={item.start_date ? new Date(item.start_date).getFullYear() : ''}
-          data-status={item.project_status ?? ''}
-        >
-          <div class="card-body">
-            {(item.theme_areas?.length > 0 || (item.start_date && item.end_date)) && (
-              <div class="tags">
-                {item.theme_areas?.map((tag) => (
-                  <span class="tag">{tag.title}</span>
-                ))}
-                {item.start_date && item.end_date && (
-                  <span class="tag">
-                    {new Date(item.start_date).getFullYear()}–{new Date(item.end_date).getFullYear()}
-                  </span>
-                )}
-              </div>
-            )}
-            <h3>{item.title}</h3>
-            <p>{item.short_summary}</p>
-            <a href={`/projekty/${item.slug}`}>Detail Projektu →</a>
-          </div>
-        </article>
+        <ProjectCard
+          project={item}
+          variant="green"
+          titleSize="22px"
+          summarySize="15px"
+          tagSize="14px"
+          tagPadding="6px 14px"
+          tagRadius="999px"
+          tagGap="5px"
+          dataThemeAreas={item.theme_areas?.map((a) => a.slug).join(',') ?? ''}
+          dataTargetGroups={item.target_groups?.map((g) => g.slug).join(',') ?? ''}
+          dataYear={item.start_date ? new Date(item.start_date).getFullYear() : ''}
+          dataStatus={item.project_status ?? ''}
+        />
       ))}
     </div>
 
@@ -135,6 +124,9 @@ const cardVariants = ['dark'] as const;
     });
 
     let visibleCount = 0;
+    const activeFilters = Object.entries(values)
+      .filter(([, value]) => value)
+      .map(([key]) => key);
 
     grid.querySelectorAll<HTMLElement>('.content-card').forEach((card) => {
       const themeAreas = (card.dataset.themeAreas ?? '').split(',');
@@ -149,6 +141,13 @@ const cardVariants = ['dark'] as const;
         (!values.status || status === values.status);
 
       card.hidden = !matches;
+      card.querySelectorAll<HTMLElement>('[data-filter-tag]').forEach((tag) => {
+        const tagType = tag.dataset.filterTag ?? '';
+        const shouldShow = activeFilters.length === 0
+          ? tagType === 'theme_area'
+          : activeFilters.includes(tagType);
+        tag.classList.toggle('is-visible', shouldShow);
+      });
       if (matches) visibleCount += 1;
     });
 

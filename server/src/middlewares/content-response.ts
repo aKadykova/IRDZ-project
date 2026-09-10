@@ -88,6 +88,7 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
             'title',
             'anchror_link',
             'target',
+            'selection_mode_projects',
             'card_variant',
             'show_tag_area_filter',
             'show_target_group_filter',
