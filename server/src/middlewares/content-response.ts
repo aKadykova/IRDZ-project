@@ -33,6 +33,7 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
     ];
     const requestPath = ctx.path.split('?')[0];
     const isGlobalRequest = requestPath === '/api/global';
+    const isProjectsRequest = requestPath === '/api/projects';
     const isBlocksRequest = ['/api/page', '/api/landing-page'].some(
       (path) => requestPath === path || requestPath.startsWith(`${path}/`),
     );
@@ -102,15 +103,15 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
               fields: projectFields,
               populate: {
                 cover_photo: imageFields,
-                theme_areas: { fields: ['title', 'slug'] },
-                target_groups: { fields: ['title', 'slug'] },
+                theme_areas: true,
+                target_groups: true,
               },
             },
             innovation_platforms: {
               fields: platformFields,
               populate: {
                 cover_photo: imageFields,
-                tag_areas: { fields: ['title', 'slug'] },
+                tag_areas: true,
                 target_groups: { fields: ['title', 'slug'] },
               },
             },
@@ -140,7 +141,18 @@ export default (_config: Record<string, unknown>, _context: { strapi: Core.Strap
         : {}),
       ...(isGlobalRequest ? layoutPopulate : {}),
       ...(isBlocksRequest ? { blocks: blocksPopulate } : {}),
+      ...(isProjectsRequest
+        ? {
+            cover_photo: imageFields,
+            theme_areas: true,
+            target_groups: true,
+          }
+        : {}),
     };
+
+    if (isProjectsRequest) {
+      ctx.query.fields = projectFields;
+    }
 
     await next();
   };
